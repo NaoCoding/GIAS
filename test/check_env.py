@@ -1,11 +1,13 @@
-from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-if not os.getenv("OPEN_ROUTER_API_KEY"):
-  raise ValueError("OPEN_ROUTER_API_KEY not set in .env file")
+required_keys = ["OPEN_ROUTER_API_KEY", "GITHUB_TOKEN"]
 
+for key in required_keys:
+  # print(key, os.getenv(key))
+  if not os.getenv(key):
+    raise ValueError(f"{key} not set in .env file")
 
 print("Passed All Environment Variables Test")
