@@ -1,9 +1,12 @@
-from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openrouter import OpenRouterProvider
+import sys
+import asyncio
+sys.path.append(sys.path[0].split("client")[0])
+from agent.root_agent import root_agent
 
-from dotenv import load_dotenv
-import os
+async def main():
+    while True:
+        user_input = input("Enter your command: ")
+        result = await root_agent().run(user_input)
+        print(result.output)
 
-load_dotenv()
-
+asyncio.run(main())

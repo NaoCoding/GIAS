@@ -3,7 +3,11 @@ import os
 
 load_dotenv()
 
-required_keys = ["OPEN_ROUTER_API_KEY", "GITHUB_TOKEN"]
+required_keys = [
+  "OPEN_ROUTER_API_KEY",
+  "GITHUB_TOKEN",
+  "MODEL_NAME"
+]
 
 for key in required_keys:
   # print(key, os.getenv(key))
