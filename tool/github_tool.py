@@ -110,7 +110,7 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
                 path=local_path,
                 glob=code_glob,
                 loader_cls=TextLoader,
-                loader_kwargs={'encoding': 'utf-8', 'errors': 'ignore'},
+                loader_kwargs={'encoding': 'utf-8'},
                 use_multithreading=True,
             )
 
