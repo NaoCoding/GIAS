@@ -7,9 +7,9 @@ from langchain_community.vectorstores import Chroma
 
 from agent.root_agent import root_agent
 
-OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
+OLLAMA_EMBEDDING_MODEL = "embeddinggemma"
 OLLAMA_BASE_URL = "http://localhost:11434"
-CHROMA_DB_PATH = "../chroma_db"
+CHROMA_DB_PATH = "./chroma_db"
 
 
 async def main():
