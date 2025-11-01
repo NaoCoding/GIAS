@@ -37,7 +37,10 @@ def get_repo(repo: str) -> github.Repository.Repository:
 
 def get_repo_content_by_git(owner, name: str) -> list[Document]:
     repo_url = f"https://github.com/{owner}/{name}.git"
-    local_path = "/tmp/temp_repo_for_rag"  # "./temp_repo_for_rag"
+    if os.name == "nt":
+        local_path = "./temp_repo_for_rag"
+    else:
+        local_path = "/tmp/temp_repo_for_rag"
     if os.path.exists(local_path):
         shutil.rmtree(local_path)
     shutil.os.makedirs(local_path, exist_ok=False)
