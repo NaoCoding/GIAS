@@ -12,7 +12,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 REPO_OWNER = os.getenv("TARGET_REPO_OWNER")
 REPO_NAME = os.getenv("TARGET_REPO_NAME")
-CHROMA_DB_PATH = "../chroma_db"
+CHROMA_DB_PATH = "./chroma_db"
 
 OLLAMA_EMBEDDING_MODEL = "embeddinggemma"
 OLLAMA_BASE_URL = "http://localhost:11434"
