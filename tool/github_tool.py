@@ -1,8 +1,11 @@
 import logging
 import os
+import shutil
 
 import github
 from dotenv import load_dotenv
+from git import Repo
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_core.documents import Document
 
 load_dotenv()
@@ -30,6 +33,114 @@ def get_repo(repo: str) -> github.Repository.Repository:
     result = g.get_repo(repo)
     g.close()
     return result
+
+
+def get_repo_content_by_git(owner, name: str) -> list[Document]:
+    repo_url = f"https://github.com/{owner}/{name}.git"
+    local_path = "/tmp/temp_repo_for_rag"  # "./temp_repo_for_rag"
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    shutil.os.makedirs(local_path, exist_ok=False)
+
+    logger.info(f"Starting shallow cloning (depth=1) of {repo_url}...")
+    try:
+        repo = Repo.clone_from(
+            repo_url, local_path, depth=1, multi_options=["--filter=blob:none"]
+        )
+    except Exception as e:
+        logger.error(f"Cloning failed: {e}")
+        return []
+
+    INCLUDE_PATTERNS = [
+        "*.py",
+        "*.js",
+        "*.ts",
+        "*.go",
+        "*.java",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "**/*.py",
+        "**/*.js",
+        "**/*.ts",
+        "**/*.go",
+        "**/*.java",
+        "**/*.c",
+        "**/*.cpp",
+        "**/*.h",
+        "README.md",
+    ]
+
+    EXCLUDE_PATTERNS = [
+        "*.log",
+        "*.lock",
+        "*.min.js",
+        "*.min.css",
+        "*/venv/*",
+        "*/node_modules/*",
+        "*/docs/*",
+        "*/tests/*",
+        "*.png",
+        "*.jpg",
+        "*.svg",
+        "*.webp",
+        "*.gif",
+        "*.pdf",
+    ]
+
+    logger.info("Clone completed. Starting local file loading and filtering...")
+
+    all_docs = []
+
+    code_globs = [
+        "**/*.py",
+        "**/*.js",
+        "**/*.ts",
+        "**/*.go",
+        "**/*.java",
+        "**/*.c",
+        "**/*.cpp",
+        "**/*.h",
+        "README.md",
+    ]
+
+    for code_glob in code_globs:
+        try:
+            loader = DirectoryLoader(
+                path=local_path,
+                glob=code_glob,
+                loader_cls=TextLoader,
+                loader_kwargs={'encoding': 'utf-8', 'errors': 'ignore'},
+                use_multithreading=True,
+            )
+
+            loaded_files = loader.load()
+
+            for doc in loaded_files:
+                if not any(
+                    excluded_dir in doc.metadata.get("path", "")
+                    for excluded_dir in (
+                        "venv",
+                        "node_modules",
+                        "dist",
+                        "docs",
+                        "tests",
+                    )
+                ):
+                    if len(doc.page_content.strip()) > 50:
+                        doc.metadata["source"] = doc.metadata.get("path", "Unknown")
+                        all_docs.append(doc)
+
+        except Exception as e:
+            logger.warning(f"Error loading files with glob {code_glob}: {e}")
+
+    logger.info(
+        f"Local file loading complete. Total filtered code files: {len(all_docs)}"
+    )
+
+    shutil.rmtree(local_path)
+
+    return all_docs
 
 
 def get_repo_content(owner: str, name: str) -> list[Document]:

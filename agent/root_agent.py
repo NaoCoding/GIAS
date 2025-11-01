@@ -1,41 +1,46 @@
+import logging
 import os
-import sys
-from dataclasses import dataclass
 
 from dotenv import load_dotenv
-from pydantic_ai import Agent, RunContext
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openrouter import OpenRouterProvider
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import ChatOpenAI
 
 from agent.prompt.root_agent import system_prompt
-from tool import github_tool
 
+LLM_MODEL = "qwen/qwen3-coder:free"
 load_dotenv()
+openrouter_key = os.environ.get("OPEN_ROUTER_API_KEY")
 
-
-@dataclass
-class run_deps:
-    repo: str
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
 class root_agent:
-
-    def __init__(self):
-        self._model = OpenAIChatModel(
-            os.getenv("MODEL_NAME"),
-            provider=OpenRouterProvider(api_key=os.getenv("OPEN_ROUTER_API_KEY")),
+    def __init__(self, vectorstore):
+        self._llm = ChatOpenAI(
+            model=LLM_MODEL,
+            openai_api_base="https://openrouter.ai/api/v1",
+            temperature=0.1,
+            api_key=openrouter_key,
         )
-        self._agent = Agent(
-            model=self._model,
-            system_prompt=system_prompt,
-            deps_type=run_deps,
+        self._retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+        self._prompt = ChatPromptTemplate.from_template(system_prompt)
+        self._rag_chain = (
+            {"context": self._retriever, "question": RunnablePassthrough()}
+            | self._prompt
+            | self._llm
+            | StrOutputParser()
         )
+        logger.info("Root agent initialized successfully.")
 
-        @self._agent.tool
-        def get_repo(ctx: RunContext[run_deps]):
-            """Get a GitHub repository by its name."""
-            return github_tool.get_repo(ctx.deps.repo)
-
-    async def run(self, user_input: str):
-        result = await self._agent.run(user_input, deps=run_deps("plait-board/drawnix"))
+    def run(self, user_input: str) -> str:
+        result = self._rag_chain.invoke(
+            {"context": self._retriever, "question": user_input}
+        )
         return result

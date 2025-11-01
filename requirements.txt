@@ -5,4 +5,6 @@ langchain
 langchain-ollama
 langchain-openai
 langchain-community
+gitpython 
+langchain-text-splitters
 chromadb

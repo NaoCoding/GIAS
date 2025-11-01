@@ -1,4 +1,5 @@
 .env
 .vscode/*
 *__pycache__*
-tool/chroma_db/*
+*chroma_db/*
+*data/*

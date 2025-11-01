@@ -3,22 +3,17 @@ import os
 import shutil
 
 from dotenv import load_dotenv
+from github_tool import get_repo_content, get_repo_content_by_git
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from github_tool import get_repo_content
 
 load_dotenv()
 REPO_OWNER = os.getenv("TARGET_REPO_OWNER")
 REPO_NAME = os.getenv("TARGET_REPO_NAME")
-CHROMA_DB_PATH = "./chroma_db"
+CHROMA_DB_PATH = "../chroma_db"
 
-LLM_MODEL = "qwen/qwen3-coder:free"
 OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
 OLLAMA_BASE_URL = "http://localhost:11434"
 
@@ -77,7 +72,9 @@ def create_rag_knowledge_base(docs: list[Document]) -> Chroma:
 
 if __name__ == "__main__":
     logger.info(f"Loading repository contents from {REPO_OWNER}/{REPO_NAME}...")
-    documents = get_repo_content(REPO_OWNER, REPO_NAME)
+    # documents = get_repo_content(REPO_OWNER, REPO_NAME)
+    # The reason we switch to Git method is to handle large repositories more efficiently
+    documents = get_repo_content_by_git(REPO_OWNER, REPO_NAME)
 
     if not documents:
         logger.error("No documents retrieved from the repository. Exiting.")
