@@ -41,8 +41,13 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
         local_path = "./temp_repo_for_rag"
     else:
         local_path = "/tmp/temp_repo_for_rag"
+        
     if os.path.exists(local_path):
-        shutil.rmtree(local_path)
+        if os.system == "nt":
+            os.system('rmdir /S /Q "{}"'.format(directory))
+        else:
+            shutil.rmtree(local_path)
+            
     shutil.os.makedirs(local_path, exist_ok=False)
 
     logger.info(f"Starting shallow cloning (depth=1) of {repo_url}...")
@@ -141,7 +146,10 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
         f"Local file loading complete. Total filtered code files: {len(all_docs)}"
     )
 
-    shutil.rmtree(local_path)
+    if os.system == "nt":
+        os.system('rmdir /S /Q "{}"'.format(directory))
+    else:
+        shutil.rmtree(local_path)
 
     return all_docs
 
