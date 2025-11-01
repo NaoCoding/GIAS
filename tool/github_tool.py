@@ -41,13 +41,13 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
         local_path = "./temp_repo_for_rag"
     else:
         local_path = "/tmp/temp_repo_for_rag"
-        
+
     if os.path.exists(local_path):
-        if os.system == "nt":
-            os.system('rmdir /S /Q "{}"'.format(directory))
+        if os.name == "nt":
+            os.system('rmdir /S /Q "{}"'.format(local_path))
         else:
             shutil.rmtree(local_path)
-            
+
     shutil.os.makedirs(local_path, exist_ok=False)
 
     logger.info(f"Starting shallow cloning (depth=1) of {repo_url}...")
@@ -118,7 +118,7 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
                 path=local_path,
                 glob=code_glob,
                 loader_cls=TextLoader,
-                loader_kwargs={'encoding': 'utf-8'},
+                loader_kwargs={"encoding": "utf-8"},
                 use_multithreading=True,
             )
 
@@ -146,8 +146,8 @@ def get_repo_content_by_git(owner, name: str) -> list[Document]:
         f"Local file loading complete. Total filtered code files: {len(all_docs)}"
     )
 
-    if os.system == "nt":
-        os.system('rmdir /S /Q "{}"'.format(directory))
+    if os.name == "nt":
+        os.system('rmdir /S /Q "{}"'.format(local_path))
     else:
         shutil.rmtree(local_path)
 
