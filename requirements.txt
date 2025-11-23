@@ -8,3 +8,5 @@ langchain-community
 gitpython 
 langchain-text-splitters
 chromadb
+fastapi
+uvicorn[standard]
