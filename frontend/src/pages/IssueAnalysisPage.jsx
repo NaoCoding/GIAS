@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { analyzeIssue, buildRag } from '../api';
+import { analyzeIssue } from '../api';
 import '../styles/IssueAnalysisPage.css';
 
 function IssueAnalysisPage() {
@@ -10,7 +10,6 @@ function IssueAnalysisPage() {
   
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [buildingRag, setBuildingRag] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -40,28 +39,6 @@ function IssueAnalysisPage() {
       setError(err.detail || 'Failed to analyze issue');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleBuildRag = async (e) => {
-    e.preventDefault();
-    
-    if (!owner.trim() || !repo.trim()) {
-      setError('Please fill in owner and repo fields');
-      return;
-    }
-
-    setBuildingRag(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await buildRag(owner, repo);
-      setSuccess(`RAG built successfully! Indexed ${response.document_count} documents`);
-    } catch (err) {
-      setError(err.detail || 'Failed to build RAG');
-    } finally {
-      setBuildingRag(false);
     }
   };
 
@@ -129,14 +106,6 @@ function IssueAnalysisPage() {
           <div className="form-buttons">
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Analyzing...' : 'Analyze Issue'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={handleBuildRag}
-              disabled={buildingRag}
-            >
-              {buildingRag ? 'Building RAG...' : 'Build RAG for Repo'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={handleClear}>
               Clear
