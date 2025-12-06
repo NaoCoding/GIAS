@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class root_agent:
-    def __init__(self, vectorstore):
+    def __init__(self, vectorstore, model_name: str = LLM_MODEL):
         self._llm = ChatOpenAI(
-            model=LLM_MODEL,
+            model=model_name,
             openai_api_base="https://openrouter.ai/api/v1",
             temperature=0.1,
             api_key=openrouter_key,
