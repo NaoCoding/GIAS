@@ -3,7 +3,7 @@ import os
 import shutil
 
 from dotenv import load_dotenv
-from github_tool import get_repo_content, get_repo_content_by_git
+from tool.github_tool import get_repo_content, get_repo_content_by_git
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
