@@ -34,7 +34,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>&copy; 2024 GIAS Frontend. Backend: http://localhost:8000</p>
+        <p>&copy; 2025 GIAS Frontend. Backend: http://localhost:8000</p>
       </footer>
     </div>
   );
