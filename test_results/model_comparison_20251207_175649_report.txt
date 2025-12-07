@@ -1,0 +1,1213 @@
+================================================================================
+ROOT AGENT MULTI-MODEL TEST REPORT
+================================================================================
+
+Test Name: model_comparison_20251207_175649
+Timestamp: 20251207_175649
+Repository: psf/requests
+
+Test Issue: Leading slash in uri followed by column fails
+Issue URL: https://github.com/psf/requests/issues/6643
+Issue ID: 6643
+
+Issue Description:
+--------------------------------------------------------------------------------
+Leading slash in uri followed by column fails.
+
+## Expected Result
+
+```python
+requests.get('http://127.0.0.1:10000//v:h')
+<Response [200]>
+```
+
+## Actual Result
+
+```python
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/urllib3/util/url.py", line 425, in parse_url
+    host, port = _HOST_PORT_RE.match(host_port).groups()  # type: ignore[union-attr]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'groups'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 711, in urlopen
+    parsed_url = parse_url(url)
+                 ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/urllib3/util/url.py", line 451, in parse_url
+    raise LocationParseError(source_url) from e
+urllib3.exceptions.LocationParseError: Failed to parse: //v:h
+```
+
+## Reproduction Steps
+
+```python
+import requests
+requests.get('http://127.0.0.1:10000//v:h')
+
+```
+
+## System Information
+
+    $ python -m requests.help
+
+```json
+{
+  "chardet": {
+    "version": null
+  },
+  "charset_normalizer": {
+    "version": "3.3.2"
+  },
+  "cryptography": {
+    "version": ""
+  },
+  "idna": {
+    "version": "3.6"
+  },
+  "implementation": {
+    "name": "CPython",
+    "version": "3.11.8"
+  },
+  "platform": {
+    "release": "5.10.209-198.812.amzn2.x86_64",
+    "system": "Linux"
+  },
+  "pyOpenSSL": {
+    "openssl_version": "",
+    "version": null
+  },
+  "requests": {
+    "version": "2.31.0"
+  },
+  "system_ssl": {
+    "version": "300000b0"
+  },
+  "urllib3": {
+    "version": "2.2.1"
+  },
+  "using_charset_normalizer": true,
+  "using_pyopenssl": false
+}
+```
+
+<!-- This command is only available on Requests v2.16.4 and greater. Otherwise,
+please provide some basic information about your system (Python version,
+operating system, &c). -->
+
+
+================================================================================
+QUERY USED FOR TESTING
+================================================================================
+
+Issue Title: Leading slash in uri followed by column fails
+
+Issue Description:
+Leading slash in uri followed by column fails.
+
+## Expected Result
+
+```python
+requests.get('http://127.0.0.1:10000//v:h')
+<Response [200]>
+```
+
+## Actual Result
+
+```python
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/urllib3/util/url.py", line 425, in parse_url
+    host, port = _HOST_PORT_RE.match(host_port).groups()  # type: ignore[union-attr]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'groups'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 711, in urlopen
+    parsed_url = parse_url(url)
+                 ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/urllib3/util/url.py", line 451, in parse_url
+    raise LocationParseError(source_url) from e
+urllib3.exceptions.LocationParseError: Failed to parse: //v:h
+```
+
+## Reproduction Steps
+
+```python
+import requests
+requests.get('http://127.0.0.1:10000//v:h')
+
+```
+
+## System Information
+
+    $ python -m requests.help
+
+```json
+{
+  "chardet": {
+    "version": null
+  },
+  "charset_normalizer": {
+    "version": "3.3.2"
+  },
+  "cryptography": {
+    "version": ""
+  },
+  "idna": {
+    "version": "3.6"
+  },
+  "implementation": {
+    "name": "CPython",
+    "version": "3.11.8"
+  },
+  "platform": {
+    "release": "5.10.209-198.812.amzn2.x86_64",
+    "system": "Linux"
+  },
+  "pyOpenSSL": {
+    "openssl_version": "",
+    "version": null
+  },
+  "requests": {
+    "version": "2.31.0"
+  },
+  "system_ssl": {
+    "version": "300000b0"
+  },
+  "urllib3": {
+    "version": "2.2.1"
+  },
+  "using_charset_normalizer": true,
+  "using_pyopenssl": false
+}
+```
+
+<!-- This command is only available on Requests v2.16.4 and greater. Otherwise,
+please provide some basic information about your system (Python version,
+operating system, &c). -->
+
+
+
+================================================================================
+MODEL 1: kwaipilot/kat-coder-pro:free
+================================================================================
+
+Status: ✓ SUCCESS
+
+Result Length: 24198 characters
+
+Full Result:
+--------------------------------------------------------------------------------
+# GitHub Issue Analysis and Solution: Leading Slash in URI Followed by Column Fails
+
+## Issue Summary
+
+The issue occurs when making HTTP requests with URLs that contain a leading slash followed by a colon (e.g., `http://127.0.0.1:10000//v:h`). The request fails with a `LocationParseError` from urllib3, specifically "Failed to parse: //v:h".
+
+**Root Cause**: The problem stems from how urllib3's URL parsing logic handles URLs with double slashes followed by a colon. The regex pattern used to extract host and port information fails to match the malformed host portion, resulting in a `None` value that causes an `AttributeError` when trying to call `.groups()`.
+
+**Affected Components**:
+- `urllib3.util.url.parse_url()` function
+- `requests` library (which depends on urllib3 for URL parsing)
+- Any application using requests with URLs containing `//` followed by `:`
+
+## Detailed Root Cause Analysis
+
+### The Problem Chain
+
+1. **URL Structure**: `http://127.0.0.1:10000//v:h`
+   - Protocol: `http`
+   - Host: `127.0.0.1`
+   - Port: `10000`
+   - Path: `//v:h` (problematic part)
+
+2. **Parsing Failure**: When urllib3 tries to parse the host portion from the path component `//v:h`, it expects a host:port pattern but encounters an invalid format.
+
+3. **Regex Mismatch**: The `_HOST_PORT_RE` regex pattern fails to match `//v:h`, returning `None` instead of a match object.
+
+4. **AttributeError**: The code attempts to call `.groups()` on the `None` result, causing the exception.
+
+### Impact Analysis
+
+- **User Impact**: Any application making requests to URLs with this pattern will fail
+- **Scope**: Affects all requests using the requests library with malformed URLs
+- **Backward Compatibility**: This is a parsing issue that should be handled gracefully rather than throwing exceptions
+
+## Current Implementation Analysis
+
+Based on the provided code snippets, the issue is not directly in the requests library code but in urllib3's URL parsing. However, the requests library could implement better error handling or preprocessing.
+
+### Key Files Involved
+
+1. `urllib3/util/url.py` - Contains the `parse_url()` function with the failing regex
+2. `requests/models.py` - Contains request preparation and data handling
+3. `requests/utils.py` - Contains utility functions for URL processing
+
+## Proposed Solution
+
+### Solution Overview
+
+The solution involves implementing a URL preprocessing step in the requests library to normalize problematic URL patterns before they reach urllib3's parser. This approach:
+
+1. Maintains backward compatibility
+2. Provides graceful handling of malformed URLs
+3. Doesn't require changes to urllib3
+4. Follows the principle of being liberal in what you accept
+
+### Detailed Code Changes
+
+#### 1. Enhanced URL Preprocessing in requests/utils.py
+
+**File**: `requests/utils.py`
+
+**Location**: Add new function after existing URL utility functions
+
+```python
+def normalize_url_path(url):
+    """
+    Normalize URL paths that contain double slashes followed by colons.
+    
+    This addresses the issue where URLs like 'http://host//v:h' fail to parse
+    due to urllib3's strict URL parsing rules.
+    
+    Args:
+        url (str): The URL to normalize
+        
+    Returns:
+        str: The normalized URL
+        
+    Examples:
+        >>> normalize_url_path('http://127.0.0.1:10000//v:h')
+        'http://127.0.0.1:10000/v:h'
+        >>> normalize_url_path('https://example.com//path:with:colons')
+        'https://example.com/path:with:colons'
+    """
+    if not isinstance(url, str):
+        return url
+        
+    # Parse the URL to separate components
+    from urllib.parse import urlparse, urlunparse
+    
+    parsed = urlparse(url)
+    
+    # Check if path contains the problematic pattern: // followed by :
+    if parsed.path and '//' in parsed.path:
+        # Replace multiple consecutive slashes with single slash in path
+        import re
+        normalized_path = re.sub(r'/+', '/', parsed.path)
+        
+        # Reconstruct the URL with normalized path
+        normalized_url = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            normalized_path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+        
+        return normalized_url
+    
+    return url
+
+
+def safe_url_parse(url):
+    """
+    Safely parse URL with preprocessing to handle edge cases.
+    
+    This function wraps urllib3's parse_url with additional preprocessing
+    to handle URLs that would otherwise fail to parse.
+    
+    Args:
+        url (str): The URL to parse
+        
+    Returns:
+        urllib3.util.url.Url: Parsed URL object
+        
+    Raises:
+        LocationParseError: If URL cannot be parsed even after normalization
+    """
+    from urllib3.util.url import parse_url
+    from urllib3.exceptions import LocationParseError
+    
+    try:
+        return parse_url(url)
+    except LocationParseError as e:
+        # Try to normalize the URL and parse again
+        normalized_url = normalize_url_path(url)
+        
+        if normalized_url != url:
+            try:
+                return parse_url(normalized_url)
+            except LocationParseError:
+                # If normalization doesn't help, re-raise the original error
+                # but with additional context
+                raise LocationParseError(
+                    f"Failed to parse URL after normalization: {url}"
+                ) from e
+        else:
+            # If no normalization was applied, re-raise the original error
+            raise
+```
+
+#### 2. Integration in requests/models.py
+
+**File**: `requests/models.py`
+
+**Location**: Modify the `prepare_url` method in the `PreparedRequest` class
+
+```python
+# Find the existing prepare_url method and modify it
+def prepare_url(self, url, params):
+    """Prepares the given HTTP URL."""
+    #: Accept objects that have string representations.
+    #: We're unable to blindly call unicode/str functions
+    #: as this will include the bytestring indicator (b'')
+    #: on python 3.x.
+    #: https://github.com/psf/requests/pull/2238
+    if isinstance(url, bytes):
+        url = url.decode("utf8")
+    else:
+        url = str(url)
+
+    # Remove leading and trailing whitespace from a URL
+    url = url.strip()
+
+    # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+    # `data` etc. to work around exceptions from `url_parse`, which
+    # handles RFC 3986 only.
+    if ':' in url and not url.lower().startswith('http'):
+        self.url = url
+        return
+
+    # Safe URL parsing with preprocessing
+    try:
+        # Use our new safe parsing function
+        from requests.utils import safe_url_parse
+        parsed = safe_url_parse(url)
+    except Exception as e:
+        # Fallback to original parsing if our enhanced method fails
+        from urllib.parse import urlsplit, urlunsplit
+        try:
+            # Handle URLs with problematic patterns
+            if '//' in url and url.count('://') == 1:
+                # Split into scheme and rest
+                scheme, rest = url.split('://', 1)
+                # Normalize double slashes in the rest
+                import re
+                rest = re.sub(r'^/+', '/', rest)
+                url = f"{scheme}://{rest}"
+            
+            parsed = urlsplit(url)
+        except Exception:
+            raise InvalidURL(f"Failed to parse: {url!r}") from e
+
+    # Ensure we always have a properly formatted URL
+    if not parsed.netloc:
+        raise MissingSchema(
+            f"Invalid URL '{url}': No schema supplied. Perhaps you meant https://{url}?"
+        )
+
+    if not parsed.scheme:
+        raise InvalidURL(f"Failed to parse url: {url!r}")
+
+    # Ensure that Unicode characters are unquoted.
+    try:
+        host = idna_encode(parsed.hostname)
+    except UnicodeError:
+        raise InvalidURL(f'URL has an invalid label: {url!r}')
+
+    # Ensure ports are integers
+    port = parsed.port
+    if port is not None and not isinstance(port, int):
+        try:
+            port = int(port)
+        except (TypeError, ValueError):
+            raise InvalidURL(f"port could not be converted to integer: '{port}'")
+
+    if port == 70 and parsed.scheme != "gopher":
+        raise InvalidURL(f"Proxy URLs require a valid port: {url!r}")
+
+    # Normalize the URL
+    netloc = add_port(host, port)
+
+    # Bare domains aren't valid URLs.
+    if not parsed.path and not parsed.scheme.startswith("http"):
+        raise InvalidURL(f"URL has an invalid path: {url!r}")
+
+    if parsed.query and parsed.path:
+        path = f"{parsed.path}&{parsed.query}"
+    elif parsed.query:
+        path = f"?{parsed.query}"
+    else:
+        path = parsed.path or ""  # Prevent None path
+
+    # Ensure we always have a properly formatted URL
+    if not path.startswith("/"):
+        path = "/" + path
+
+    fragment = parsed.fragment
+    if fragment:
+        path = f"{path}#{fragment}"
+
+    # Reconstruct the URL
+    self.url = urlunsplit([parsed.scheme, netloc, path, "", ""])
+
+    # Add any GET parameters to the URL.
+    if params:
+        self.url = self.add_params(self.url, params)
+```
+
+#### 3. Enhanced Error Handling in requests/api.py
+
+**File**: `requests/api.py`
+
+**Location**: Modify the `request` function
+
+```python
+def request(
+    method,
+    url,
+    **kwargs,
+):
+    """Constructs and sends a :class:`Request <Request>`.
+
+    :param method: method for the new
+        :class:`Request` object: ``GET``, ``OPTIONS``, ``HEAD``, ``POST``, ``PUT``, ``PATCH``, or ``DELETE``.
+    :param url: URL for the new :class:`Request` object.
+    :param params: (optional) Dictionary, list of tuples or bytes to send
+        in the query string for the :class:`Request`.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
+    :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
+    :param files: (optional) Dictionary of ``'name': file-like-objects`` (or ``{'name': file-tuple}``) for multipart encoding upload.
+        ``file-tuple`` can be a 2-tuple ``('filename', fileobj)``, 3-tuple ``('filename', fileobj, 'content_type')``
+        or a 4-tuple ``('filename', fileobj, 'content_type', custom_headers)``, where ``'content-type'`` is a string
+        defining the content type of the given file and ``custom_headers`` a dict-like object containing additional headers
+        to add for the file.
+    :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
+    :param timeout: (optional) How many seconds to wait for the server to send data
+        before giving up, as a float, or a :ref:`(connect timeout, read
+        timeout) <timeouts>` tuple.
+    :type timeout: float or tuple
+    :param allow_redirects: (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to ``True``.
+    :type allow_redirects: bool
+    :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+    :param verify: (optional) Either a boolean, in which case it controls whether we verify
+            the server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. Defaults to ``True``.
+    :param stream: (optional) if ``False``, the response content will be immediately downloaded.
+    :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+
+    Usage::
+
+      >>> import requests
+      >>> req = requests.request('GET', 'https://httpbin.org/get')
+      >>> req
+      <Response [200]>
+    """
+
+    # By using the 'with' statement we are sure the session is closed, thus we
+    # avoid leaving sockets open which can trigger a ResourceWarning in some
+    # cases, and look like a memory leak in others.
+    with sessions.Session() as session:
+        try:
+            # Pre-process URL to handle problematic patterns
+            from requests.utils import normalize_url_path
+            normalized_url = normalize_url_path(url)
+            
+            if normalized_url != url:
+                # Log the normalization for debugging purposes
+                import logging
+                logging.getLogger("requests").debug(
+                    f"URL normalized from '{url}' to '{normalized_url}'"
+                )
+            
+            return session.request(method=method, url=normalized_url, **kwargs)
+        except Exception as e:
+            # Provide more helpful error messages for URL parsing issues
+            if "LocationParseError" in str(type(e)) or "Failed to parse" in str(e):
+                raise InvalidURL(
+                    f"Invalid URL '{url}': {str(e)}. "
+                    f"Consider checking the URL format or using a different URL."
+                ) from e
+            raise
+```
+
+## Implementation Steps
+
+### Step 1: Add URL Normalization Utilities
+
+**Action**: Add the `normalize_url_path` and `safe_url_parse` functions to `requests/utils.py`
+
+**Expected Outcome**: 
+- New utility functions available for URL preprocessing
+- Functions handle edge cases gracefully
+- Backward compatibility maintained
+
+**Verification**:
+```python
+from requests.utils import normalize_url_path, safe_url_parse
+
+# Test cases
+assert normalize_url_path('http://127.0.0.1:10000//v:h') == 'http://127.0.0.1:10000/v:h'
+assert normalize_url_path('https://example.com//path:with:colons') == 'https://example.com/path:with:colons'
+assert normalize_url_path('http://normal.url/path') == 'http://normal.url/path'  # unchanged
+```
+
+### Step 2: Enhance URL Preparation in PreparedRequest
+
+**Action**: Modify the `prepare_url` method in `requests/models.py` to use the new safe parsing
+
+**Expected Outcome**:
+- URL preparation handles problematic patterns
+- Graceful fallback for edge cases
+- Maintains existing functionality
+
+**Verification**:
+```python
+from requests.models import PreparedRequest
+
+# Test the enhanced prepare_url method
+req = PreparedRequest()
+req.prepare_url('http://127.0.0.1:10000//v:h', None)
+assert req.url == 'http://127.0.0.1:10000/v:h'
+```
+
+### Step 3: Add Enhanced Error Handling
+
+**Action**: Modify the `request` function in `requests/api.py` to include URL preprocessing
+
+**Expected Outcome**:
+- URLs are normalized before processing
+- Better error messages for parsing failures
+- Logging of URL normalization
+
+**Verification**:
+```python
+import requests
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Test the problematic URL
+response = requests.get('http://127.0.0.1:10000//v:h')
+# Should not raise an exception and should log the normalization
+```
+
+### Step 4: Add Comprehensive Tests
+
+**Action**: Create test cases to verify the fix
+
+**Expected Outcome**:
+- All edge cases are covered
+- Regression tests prevent future issues
+- Documentation examples work correctly
+
+**Test File**: `tests/test_url_normalization.py`
+
+```python
+import pytest
+import requests
+from requests.utils import normalize_url_path, safe_url_parse
+from urllib3.exceptions import LocationParseError
+
+
+class TestURLNormalization:
+    
+    def test_normalize_url_path_basic(self):
+        """Test basic URL path normalization."""
+        assert normalize_url_path('http://example.com//path') == 'http://example.com/path'
+        assert normalize_url_path('https://example.com///path') == 'https://example.com/path'
+    
+    def test_normalize_url_path_with_colons(self):
+        """Test normalization of URLs with colons in path."""
+        assert normalize_url_path('http://127.0.0.1:10000//v:h') == 'http://127.0.0.1:10000/v:h'
+        assert normalize_url_path('https://example.com//path:with:colons') == 'https://example.com/path:with:colons'
+    
+    def test_normalize_url_path_no_change(self):
+        """Test that normal URLs are not modified."""
+        url = 'http://example.com/path'
+        assert normalize_url_path(url) == url
+        
+        url = 'https://example.com/path?query=value'
+        assert normalize_url_path(url) == url
+    
+    def test_normalize_url_path_edge_cases(self):
+        """Test edge cases for URL normalization."""
+        # URL without path
+        assert normalize_url_path('http://example.com') == 'http://example.com'
+        
+        # URL with only slashes
+        assert normalize_url_path('http://example.com//') == 'http://example.com/'
+        
+        # URL with query parameters
+        assert normalize_url_path('http://example.com//path?query=value') == 'http://example.com/path?query=value'
+    
+    def test_safe_url_parse_success(self):
+        """Test successful URL parsing with safe_url_parse."""
+        # Normal URL
+        result = safe_url_parse('http://example.com/path')
+        assert result.host == 'example.com'
+        
+        # Problematic URL that should be normalized
+        result = safe_url_parse('http://127.0.0.1:10000//v:h')
+        assert result.host == '127.0.0.1'
+        assert result.port == 10000
+    
+    def test_safe_url_parse_failure(self):
+        """Test that safe_url_parse still raises errors for truly invalid URLs."""
+        with pytest.raises(LocationParseError):
+            safe_url_parse('invalid-url-without-scheme')
+    
+    def test_requests_integration(self, monkeypatch):
+        """Test that requests handles problematic URLs correctly."""
+        # Mock the response to avoid actual network calls
+        def mock_send(*args, **kwargs):
+            mock_response = requests.Response()
+            mock_response.status_code = 200
+            mock_response._content = b'OK'
+            return mock_response
+        
+        monkeypatch.setattr(requests.adapters.HTTPAdapter, 'send', mock_send)
+        
+        # This should not raise an exception
+        response = requests.get('http://127.0.0.1:10000//v:h')
+        assert response.status_code == 200
+
+
+class TestIssueReproduction:
+    
+    def test_original_issue_case(self, monkeypatch):
+        """Test the exact case from the GitHub issue."""
+        def mock_send(*args, **kwargs):
+            mock_response = requests.Response()
+            mock_response.status_code = 200
+            mock_response._content = b'OK'
+            return mock_response
+        
+        monkeypatch.setattr(requests.adapters.HTTPAdapter, 'send', mock_send)
+        
+        # This was failing before the fix
+        response = requests.get('http://127.0.0.1:10000//v:h')
+        assert response.status_code == 200
+    
+    def test_various_problematic_patterns(self, monkeypatch):
+        """Test various URL patterns that could cause issues."""
+        def mock_send(*args, **kwargs):
+            mock_response = requests.Response()
+            mock_response.status_code = 200
+            mock_response._content = b'OK'
+            return mock_response
+        
+        monkeypatch.setattr(requests.adapters.HTTPAdapter, 'send', mock_send)
+        
+        problematic_urls = [
+            'http://127.0.0.1:10000//v:h',
+            'https://example.com//path:with:colons',
+            'http://localhost//api:v1',
+            'https://api.example.com///endpoint:path',
+        ]
+        
+        for url in problematic_urls:
+            # Should not raise an exception
+            response = requests.get(url)
+            assert response.status_code == 200
+```
+
+## Testing and Verification
+
+### Unit Tests
+
+Run the comprehensive test suite:
+
+```bash
+pytest tests/test_url_normalization.py -v
+```
+
+**Expected Results**:
+- All tests pass
+- No regressions in existing functionality
+- Edge cases are properly handled
+
+### Integration Tests
+
+Test with real HTTP servers:
+
+```python
+import requests
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class TestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'OK')
+
+# Start test server
+server = HTTPServer(('127.0.0.1', 10000), TestHandler)
+server_thread = threading.Thread(target=server.serve_forever)
+server_thread.daemon = True
+server_thread.start()
+
+try:
+    # Test the problematic URL
+    response = requests.get('http://127.0.0.1:10000//v:h')
+    print(f"Response status: {response.status_code}")
+    print(f"Response content: {response.text}")
+finally:
+    server.shutdown()
+```
+
+### Performance Testing
+
+Verify that the fix doesn't significantly impact performance:
+
+```python
+import time
+import requests
+
+# Test performance with normal URLs
+start_time = time.time()
+for _ in range(1000):
+    requests.get('http://httpbin.org/get', timeout=5)
+normal_time = time.time() - start_time
+
+# Test performance with problematic URLs (should be normalized)
+start_time = time.time()
+for _ in range(1000):
+    requests.get('http://httpbin.org//get', timeout=5)
+problematic_time = time.time() - start_time
+
+print(f"Normal URL time: {normal_time:.2f}s")
+print(f"Problematic URL time: {problematic_time:.2f}s")
+print(f"Overhead: {((problematic_time - normal_time) / normal_time * 100):.2f}%")
+```
+
+## Side Effects and Considerations
+
+### Backward Compatibility
+
+**Positive Impacts**:
+- Existing valid URLs continue to work unchanged
+- No breaking changes to the API
+- Better error messages for invalid URLs
+
+**Potential Concerns**:
+- URLs with intentional double slashes might be normalized unexpectedly
+- Some applications might rely on the current parsing behavior
+
+### Migration Path
+
+For applications that might be affected:
+
+1. **Review URL patterns**: Check if any URLs intentionally use double slashes
+2. **Test thoroughly**: Run comprehensive tests with the new version
+3. **Monitor logs**: Watch for URL normalization messages in debug logs
+
+### Security Considerations
+
+**Benefits**:
+- Prevents potential security issues from malformed URLs
+- More consistent URL handling reduces attack surface
+
+**Risks**:
+- URL normalization could potentially change the intended target
+- Need to ensure normalization doesn't bypass security checks
+
+### Performance Impact
+
+**Expected Impact**:
+- Minimal performance overhead for normal URLs
+- Additional processing only for problematic URLs
+- Regex operations are fast and cached
+
+**Optimization Opportunities**:
+- Cache normalized URLs to avoid repeated processing
+- Use compiled regex patterns for better performance
+
+## Additional Context and Improvements
+
+### Related Issues
+
+This fix addresses several related problems:
+
+1. **Inconsistent URL handling**: Different behavior for similar URL patterns
+2. **Poor error messages**: Cryptic error messages for parsing failures
+3. **User experience**: Users shouldn't need to understand URL parsing internals
+
+### Future Enhancements
+
+Consider these additional improvements:
+
+1. **Configuration option**: Allow users to disable URL normalization
+2. **More granular control**: Different normalization rules for different URL components
+3. **Better documentation**: Clear examples of supported URL formats
+4. **Enhanced logging**: More detailed logging for debugging URL issues
+
+### Documentation Updates
+
+Add to the requests documentation:
+
+```markdown
+## URL Handling
+
+Requests automatically handles URLs with problematic patterns like double slashes followed by colons. For example:
+
+```python
+# This will be automatically normalized
+requests.get('http://127.0.0.1:10000//v:h')
+# Is equivalent to:
+requests.get('http://127.0.0.1:10000/v:h')
+```
+
+This normalization happens transparently and helps prevent parsing errors while maintaining backward compatibility.
+```
+
+## Conclusion
+
+This comprehensive solution addresses the GitHub issue by:
+
+1. **Implementing URL preprocessing** to normalize problematic patterns
+2. **Adding robust error handling** with better error messages
+3. **Maintaining backward compatibility** with existing code
+4. **Providing comprehensive testing** to ensure reliability
+5. **Documenting the changes** for user awareness
+
+The fix is production-ready, handles edge cases, and provides a better user experience while maintaining the reliability and performance of the requests library.
+
+================================================================================
+MODEL 2: qwen/qwen3-coder:free
+================================================================================
+
+Status: ✗ ERROR
+
+Error: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3-coder:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Venice'}}, 'user_id': 'user_32izgjWarmbC1dp956etbTly9VB'}
+
+================================================================================
+MODEL 3: nvidia/nemotron-nano-9b-v2:free
+================================================================================
+
+Status: ✓ SUCCESS
+
+Result Length: 4704 characters
+
+Full Result:
+--------------------------------------------------------------------------------
+### Comprehensive Solution to Fix Leading Slash URL Parsing Issue in Requests Library
+
+---
+
+#### **1. Detailed Root Cause Analysis**
+
+**Underlying Problem:**  
+The error occurs because the URL `//v:h` is passed to `urllib3.util.url.parse_url`, which fails to parse it due to an invalid host:port format. The regex in `urllib3` expects a host:port pattern (e.g., `hostname:port`), but `//v:h` contains a path-like structure instead.
+
+**Why It Occurs:**  
+The URL `http://127.0.0.1:10000//v:h` is valid, but the path `/v:h` contains a colon (`:`), which is not URL-encoded. When this path is appended to the URL, `urllib3` attempts to parse `//v:h` as the host:port segment, leading to a parsing failure.
+
+**Scope of Impact:**  
+- Affects any request with a multipart/form-data body containing filenames with special characters (e.g., `:`).
+- Impacts users submitting forms or APIs with such filenames, causing critical `AttributeError` crashes.
+
+---
+
+#### **2. Current Implementation Analysis**
+
+**Broken Code:**  
+In `requests.models.py`, filenames in multipart/form-data requests are not URL-encoded. For example:
+```python
+# Filename 'v:h' becomes 'v:h' instead of 'v%3Ah'
+encoded_filename = urllib.parse.quote(filename)  # Missing in current code
+```
+
+**How the Bug Manifests:**  
+- When a filename like `v:h` is submitted, it is appended to the URL path as `//v:h` (due to multipart/form-data encoding).
+- `urllib3` tries to parse `//v:h` as `host:port`, failing because `h` is not a valid port number.
+
+---
+
+#### **3. Proposed Code Changes**
+
+**Key Fix:**  
+URL-encode filenames in multipart/form-data requests to prevent malformed URLs.
+
+**Specific Changes:**
+
+**File:** `requests/models.py`  
+**Line Numbers:** Around `requests/models.py:120-150` (in `_encode_files` method)
+
+**Before:**
+```python
+def _encode_files(files, data):
+    ...
+    for k, v in files.items():
+        if isinstance(v, (tuple, list)):
+            for part in v:
+                filename, fileobj, content_type, custom_headers = part[:4]
+                # No URL encoding here
+                parts.append(f'--{boundary}\r\nContent-Disposition: attachment; filename="{filename}"; ...')
+```
+
+**After:**
+```python
+def _encode_files(files, data):
+    ...
+    for k, v in files.items():
+        if isinstance(v, (tuple, list)):
+            for part in v:
+                filename, fileobj, content_type, custom_headers = part[:4]
+                encoded_filename = urllib.parse.quote(filename)  # Add URL encoding
+                parts.append(f'--{boundary}\r\nContent-Disposition: attachment; filename="{encoded_filename}"; ...')
+```
+
+**Explanation:**  
+- `urllib.parse.quote(filename)` converts `v:h` to `v%3Ah`, preventing `//v:h` in URLs.
+- Ensures special characters in filenames are safely encoded.
+
+---
+
+#### **4. Step-by-Step Implementation Guide**
+
+**Step 1: Add URL Encoding for Filenames**  
+- **Action:** Insert `urllib.parse.quote(filename)` in `_encode_files` method.  
+- **Expected Outcome:** Filenames with `:` become URL-encoded (e.g., `v%3Ah`).  
+- **Testing:** Submit a form with `filename=v:h` and verify no `//v:h` in the URL.
+
+**Step 2: Update Documentation**  
+- **Action:** Note that filenames must be URL-encoded for special characters.  
+- **Expected Outcome:** Users avoid submitting unencoded filenames.
+
+**Step 3: Test Comprehensive Scenarios**  
+- **Action:** Test with filenames like `v:h`, `test:file.txt`, and ` specialChars `:`.  
+- **Expected Outcome:** No parsing errors in `urllib3`.
+
+---
+
+#### **5. Production-Ready Considerations**
+
+**Edge Cases & Error Handling:**  
+- filenames with multiple `:` (e.g., `v:h:test`) are encoded correctly (`v%3Ah%3Atest`).  
+- Non-string filenames (e.g., `None`) are filtered out before encoding.
+
+**Backward Compatibility:**  
+- Existing filesystems with unencoded filenames (e.g., `v:h`) will still work, as the fix only affects URL construction.
+
+**Breaking Changes:**  
+- None. The fix maintains existing functionality while improving error resilience.
+
+---
+
+#### **6. Additional Context**
+
+**Related Improvements:**  
+- Consider adding URL encoding for all path parameters in multipart requests.  
+- Audit other parts of Requests where filenames are used (e.g., query parameters).
+
+**Potential Side Effects:**  
+- Increased URL length due to encoding, but this is negligible for most cases.
+
+---
+
+### **Final Verification**  
+After implementing the fix, validate by:  
+1. Submitting a request with `filename=v:h`.  
+2. Checking that the URL contains `v%3Ah` instead of `v:h`.  
+3. Confirming no `AttributeError` in `urllib3.parse_url`.  
+
+This solution ensures robust handling of special characters in filenames, aligning with production standards.
+
+
+================================================================================
+MODEL 4: google/gemma-3-27b-it:free
+================================================================================
+
+Status: ✓ SUCCESS
+
+Result Length: 8742 characters
+
+Full Result:
+--------------------------------------------------------------------------------
+## Comprehensive Solution for Leading Slash in URI Issue
+
+Here's a detailed analysis and solution for the reported issue, focusing on a production-ready fix for the `requests` library.
+
+### 1. Issue Summary & Root Cause Analysis
+
+**Issue:** The `requests` library fails to parse URLs with a leading slash immediately followed by a column (e.g., `http://127.0.0.1:10000//v:h`), resulting in a `urllib3.exceptions.LocationParseError`.  The traceback points to a failure in `urllib3.util.url.parse_url` when attempting to extract the host and port.
+
+**Root Cause:** The `urllib3` library's `parse_url` function, which `requests` relies on, has a regular expression (`_HOST_PORT_RE`) that doesn't correctly handle URLs starting with `//`.  This pattern is often seen when a server is configured to redirect, or when a user intentionally provides a malformed URL. The regex expects a valid hostname or IP address before the port, and the `//` sequence causes it to fail, leading to `None` being returned when attempting to extract the host and port, and subsequently an `AttributeError` when trying to call `.groups()` on `None`.  The `LocationParseError` is then raised.
+
+**Affected File Paths:**
+
+*   `psf/requests/src/requests/api.py` (where the initial request is made)
+*   `psf/requests/src/requests/sessions.py` (where the session sends the request)
+*   `psf/requests/src/requests/adapters.py` (where the connection is handled)
+*   `psf/requests/src/requests/utils.py` (indirectly, as it might be involved in URL manipulation)
+*   `urllib3/util/url.py` (the core of the parsing issue)
+
+**Scope of Impact:** This bug affects any request made with a URL that starts with `//` followed by a path or other invalid characters. This could occur in various scenarios, including:
+
+*   Incorrectly formed URLs provided by users.
+*   Redirects that result in a malformed URL.
+*   Applications that dynamically construct URLs and inadvertently create this pattern.
+
+
+
+### 2. Detailed Analysis of Current Implementation
+
+The current implementation relies on `urllib3` for URL parsing.  `requests` doesn't perform any specific validation or sanitization of the URL before passing it to `urllib3`.  This is generally acceptable, as `urllib3` is a well-established library for handling HTTP requests. However, the vulnerability in `urllib3`'s parsing logic exposes a weakness in `requests`.
+
+The bug manifests when `urllib3.util.url.parse_url` encounters a URL like `//v:h`. The regex `_HOST_PORT_RE` fails to match, resulting in `host` and `port` being `None`.  The subsequent call to `host.groups()` throws the `AttributeError`, which propagates up the call stack, ultimately causing the `requests.get()` call to fail.
+
+The impact is limited to scenarios where such malformed URLs are used.  However, given the potential for redirects and user-provided input, it's a significant issue that can lead to application crashes or unexpected behavior.
+
+### 3. Proposed Code Changes
+
+The ideal solution is to fix the `urllib3` library itself. However, as we are addressing this from the `requests` perspective, we can implement a workaround by sanitizing the URL before passing it to `urllib3`.  This involves adding a check for the `//` pattern and replacing it with a valid scheme (e.g., `http://`) if necessary.
+
+**File:** `psf/requests/src/requests/api.py`
+
+**Before:**
+
+```python
+def get(url, params=None, **kwargs):
+    """Sends a GET request."""
+    return request("get", url, params=params, **kwargs)
+```
+
+**After:**
+
+```python
+def get(url, params=None, **kwargs):
+    """Sends a GET request."""
+    if url.startswith("//"):
+        url = "http://" + url  # Or a more appropriate default scheme
+    return request("get", url, params=params, **kwargs)
+```
+
+**Explanation:**
+
+This change adds a simple check at the beginning of the `get` function. If the URL starts with `//`, it prepends `http://` to it. This ensures that the URL is in a valid format before being passed to the `request` function, which ultimately calls `urllib3`.  Using `http://` as the default scheme is a reasonable choice, but it might be necessary to adjust this based on the specific application's requirements.
+
+**File:** `psf/requests/src/requests/sessions.py`
+
+We should also apply the same fix to other request methods like `post`, `put`, `delete`, etc. to ensure consistency.
+
+**Before:**
+
+```python
+def request(self, method, url, params=None, data=None, headers=None, cookies=None, files=None, auth=None, timeout=None, allow_redirects=True, proxies=None, hooks=None, stream=None, cert=None, json=None):
+    """Sends a request."""
+    # ... (rest of the code)
+```
+
+**After:**
+
+```python
+def request(self, method, url, params=None, data=None, headers=None, cookies=None, files=None, auth=None, timeout=None, allow_redirects=True, proxies=None, hooks=None, stream=None, cert=None, json=None):
+    """Sends a request."""
+    if url.startswith("//"):
+        url = "http://" + url  # Or a more appropriate default scheme
+    # ... (rest of the code)
+```
+
+**Explanation:**
+
+This change applies the same URL sanitization logic to the core `request` function, ensuring that all request methods are protected against this issue.
+
+### 4. Implementation Guide
+
+**Prerequisites:**
+
+*   A development environment with the `requests` library installed.
+*   Basic understanding of Python and Git.
+
+**Implementation Steps:**
+
+1.  **Create a Branch:** Create a new branch in your local `requests` repository: `git checkout -b fix-leading-slash-uri`
+2.  **Apply the Changes:**  Modify the `psf/requests/src/requests/api.py` and `psf/requests/src/requests/sessions.py` files as shown in the "Proposed Code Changes" section.
+3.  **Commit the Changes:** Commit the changes with a descriptive message: `git commit -m "Fix: Handle leading slash in URI to prevent urllib3 parsing error"`
+4.  **Run Tests:** Run the `requests` test suite to ensure that the changes haven't introduced any regressions: `python -m pytest`
+5.  **Add a Specific Test Case:** Add a new test case to specifically verify the fix for the leading slash issue.  This is crucial to prevent regressions in the future.  (See "Testing and Verification" section below).
+6.  **Push the Branch:** Push the branch to your remote repository: `git push origin fix-leading-slash-uri`
+7.  **Create a Pull Request:** Create a pull request to the `requests` repository.
+
+**Testing and Verification:**
+
+1.  **Unit Tests:** Add the following test case to `psf/requests/tests/test_utils.py` (or a suitable test file):
+
+```python
+import requests
+
+def test_leading_slash_uri():
+    response = requests.get("http://127.0.0.1:10000//v:h")
+    assert response.status_code == 200  # Or the expected status code
+```
+
+2.  **Integration Tests:**  If possible, test the fix in an integration environment that simulates real-world usage scenarios.
+3.  **Manual Testing:**  Manually test the fix by sending requests with URLs that start with `//` using a tool like `curl` or `Postman`.
+
+**Verification:**
+
+*   The unit test should pass without any errors.
+*   The integration tests should pass without any errors.
+*   Manual testing should confirm that requests with leading slashes are handled correctly.
+
+### 5. Side Effects and Considerations
+
+*   **Backward Compatibility:** This change is generally backward-compatible.  It only affects URLs that start with `//`, which are likely to be invalid in most cases.
+*   **Default Scheme:** The choice of `http://` as the default scheme might not be appropriate for all applications.  Consider allowing users to configure the default scheme or providing a more intelligent way to determine the correct scheme.
+*   **URL Normalization:**  This fix only addresses the immediate parsing error.  It doesn't perform full URL normalization.  If more robust URL handling is required, consider using a dedicated URL parsing library.
+*   **urllib3 Update:**  The ultimate solution is to fix the underlying issue in `urllib3`.  Monitor the `urllib3` project for updates and consider upgrading to a version that includes the fix.
+
+### 6. Additional Context
+
+*   **Related Issues:**  There might be other similar issues related to URL parsing in `urllib3`.  It's worth investigating these issues to ensure that the fix is comprehensive.
+*   **Improvements:**  Consider adding more robust URL validation and sanitization to `requests` to prevent similar issues in the future.  This could involve using a dedicated URL parsing library or implementing custom validation logic.
+*   **Error Handling:**  Instead of simply prepending `http://`, you could log a warning message to inform the user that the URL was malformed and has been corrected. This provides better transparency and helps users identify potential issues.
+
+
+================================================================================

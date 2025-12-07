@@ -1,0 +1,31 @@
+================================================================================
+TEST SUMMARY & COMPARISON
+================================================================================
+
+Test Timestamp: 20251207_175649
+Total Models Tested: 4
+Successful Tests: 3
+Failed Tests: 1
+
+--------------------------------------------------------------------------------
+MODEL STATUS OVERVIEW
+--------------------------------------------------------------------------------
+
+kwaipilot/kat-coder-pro:free: ✓ SUCCESS
+qwen/qwen3-coder:free: ✗ FAILED
+nvidia/nemotron-nano-9b-v2:free: ✓ SUCCESS
+google/gemma-3-27b-it:free: ✓ SUCCESS
+
+--------------------------------------------------------------------------------
+RESULT LENGTH COMPARISON
+--------------------------------------------------------------------------------
+
+1. kwaipilot/kat-coder-pro:free: 24198 characters
+2. google/gemma-3-27b-it:free: 8742 characters
+3. nvidia/nemotron-nano-9b-v2:free: 4704 characters
+
+Most Verbose: kwaipilot/kat-coder-pro:free (24198 chars)
+Most Concise: nvidia/nemotron-nano-9b-v2:free (4704 chars)
+Difference: 19494 characters
+
+================================================================================
