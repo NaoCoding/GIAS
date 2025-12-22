@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { queryAgent } from '../api';
 import '../styles/QueryPage.css';
 
-function QueryPage() {
-  const [query, setQuery] = useState('');
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+function QueryPage(): React.ReactElement {
+  const [query, setQuery] = useState<string>('');
+  const [result, setResult] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!query.trim()) {
       setError('Please enter a query');
@@ -22,14 +22,15 @@ function QueryPage() {
     try {
       const response = await queryAgent(query);
       setResult(response.result);
-    } catch (err) {
-      setError(err.detail || 'Failed to process query');
+    } catch (err: unknown) {
+      const error = err as any;
+      setError(error.detail || 'Failed to process query');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClear = () => {
+  const handleClear = (): void => {
     setQuery('');
     setResult(null);
     setError(null);
@@ -47,7 +48,7 @@ function QueryPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter your question here..."
-            rows="6"
+            rows={6}
           />
           <div className="form-buttons">
             <button type="submit" className="btn btn-primary" disabled={loading}>

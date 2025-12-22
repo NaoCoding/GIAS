@@ -1,22 +1,46 @@
-import React, { useState } from 'react';
-import { analyzeIssue } from '../api';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { analyzeIssue, AnalysisResponse } from '../api';
 import '../styles/IssueAnalysisPage.css';
 
-function IssueAnalysisPage() {
-  const [owner, setOwner] = useState('');
-  const [repo, setRepo] = useState('');
-  const [issueId, setIssueId] = useState('');
-  const [customQuery, setCustomQuery] = useState('');
-  
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+interface IssueAnalysisPageProps {
+  initialOwner?: string;
+  initialRepo?: string;
+  initialIssueId?: string;
+}
 
-  const handleAnalyze = async (e) => {
-    e.preventDefault();
-    
-    if (!owner.trim() || !repo.trim() || !issueId.trim()) {
+function IssueAnalysisPage({ 
+  initialOwner = '', 
+  initialRepo = '', 
+  initialIssueId = '' 
+}: IssueAnalysisPageProps): React.ReactElement {
+  const [owner, setOwner] = useState<string>(initialOwner);
+  const [repo, setRepo] = useState<string>(initialRepo);
+  const [issueId, setIssueId] = useState<string>(initialIssueId);
+  const [customQuery, setCustomQuery] = useState<string>('');
+  
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  const hasAnalyzedRef = useRef<boolean>(false);
+
+  // Auto-trigger analysis when route parameters are provided (only once)
+  useEffect(() => {
+    if (initialOwner && initialRepo && initialIssueId && !hasAnalyzedRef.current) {
+      hasAnalyzedRef.current = true;
+      handleAnalyzeWithParams(initialOwner, initialRepo, initialIssueId);
+    }
+  }, []);
+
+  const handleAnalyzeWithParams = async (
+    ownerParam: string,
+    repoParam: string,
+    issueIdParam: string,
+    customQueryParam: string = ''
+  ): Promise<void> => {
+    if (!ownerParam.trim() || !repoParam.trim() || !issueIdParam.trim()) {
       setError('Please fill in all fields (owner, repo, issue ID)');
       return;
     }
@@ -28,21 +52,27 @@ function IssueAnalysisPage() {
 
     try {
       const response = await analyzeIssue(
-        owner,
-        repo,
-        parseInt(issueId),
-        customQuery.trim() || null
+        ownerParam,
+        repoParam,
+        parseInt(issueIdParam),
+        customQueryParam.trim() || null
       );
       setAnalysis(response);
       setSuccess('Issue analyzed successfully!');
-    } catch (err) {
-      setError(err.detail || 'Failed to analyze issue');
+    } catch (err: unknown) {
+      const error = err as any;
+      setError(error.detail || 'Failed to analyze issue');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClear = () => {
+  const handleAnalyze = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    await handleAnalyzeWithParams(owner, repo, issueId, customQuery);
+  };
+
+  const handleClear = (): void => {
     setOwner('');
     setRepo('');
     setIssueId('');
@@ -50,6 +80,7 @@ function IssueAnalysisPage() {
     setAnalysis(null);
     setError(null);
     setSuccess(null);
+    hasAnalyzedRef.current = false;
   };
 
   return (
@@ -98,7 +129,7 @@ function IssueAnalysisPage() {
               value={customQuery}
               onChange={(e) => setCustomQuery(e.target.value)}
               placeholder="Leave empty to use issue content, or enter a custom question..."
-              rows="4"
+              rows={4}
               className="form-input"
             />
           </div>
@@ -148,7 +179,7 @@ function IssueAnalysisPage() {
               <div className="detail-section">
                 <h4>Analysis</h4>
                 <div className="analysis-text">
-                  {analysis.analysis}
+                  <ReactMarkdown>{analysis.analysis}</ReactMarkdown>
                 </div>
               </div>
             </div>

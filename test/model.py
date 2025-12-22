@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import json
+import time
 from datetime import datetime
 from typing import List, Dict
 
@@ -126,15 +127,21 @@ class TestRootAgentWithDifferentModels:
             agent = root_agent(self.vectorstore, model_name=model_name)
             
             logger.info(f"Running analysis with {model_name}...")
+            start_time = time.time()
             result = agent.run(user_query)
+            end_time = time.time()
+            
+            elapsed_time = end_time - start_time
             
             logger.info(f"Analysis complete for {model_name}")
+            logger.info(f"Time taken: {elapsed_time:.2f} seconds")
             
             return {
                 "model": model_name,
                 "status": "success",
                 "result": result,
                 "query_length": len(user_query),
+                "time_taken": elapsed_time,
             }
 
         except Exception as e:
@@ -143,6 +150,7 @@ class TestRootAgentWithDifferentModels:
                 "model": model_name,
                 "status": "error",
                 "error": str(e),
+                "time_taken": 0,
             }
 
     async def run_tests(self):
@@ -207,9 +215,11 @@ class TestRootAgentWithDifferentModels:
                 logger.info(f"Result Preview (first 500 chars):")
                 logger.info(f"\n{result['result'][:500]}...\n")
                 logger.info(f"Full result length: {len(result['result'])} characters")
+                logger.info(f"Time taken: {result['time_taken']:.2f} seconds")
             else:
                 logger.info(f"Status: ✗ ERROR")
                 logger.info(f"Error: {result['error']}")
+                logger.info(f"Time taken: {result['time_taken']:.2f} seconds")
 
         # Detailed comparison
         logger.info(f"\n{'='*80}")
@@ -265,7 +275,8 @@ class TestRootAgentWithDifferentModels:
                     "status": result["status"],
                     "result_length": len(result.get("result", "")),
                     "error": result.get("error", None),
-                    "full_result": result.get("result", "")
+                    "full_result": result.get("result", ""),
+                    "time_taken": result.get("time_taken", 0),
                 }
             
             # Save JSON results
@@ -317,12 +328,14 @@ class TestRootAgentWithDifferentModels:
                 if result["status"] == "success":
                     f.write("Status: ✓ SUCCESS\n\n")
                     f.write(f"Result Length: {len(result['result'])} characters\n\n")
+                    f.write(f"Time Taken: {result['time_taken']:.2f} seconds\n\n")
                     f.write("Full Result:\n")
                     f.write("-"*80 + "\n")
                     f.write(result['result'] + "\n")
                 else:
                     f.write("Status: ✗ ERROR\n\n")
                     f.write(f"Error: {result['error']}\n")
+                    f.write(f"Time Taken: {result['time_taken']:.2f} seconds\n")
             
             f.write("\n" + "="*80 + "\n")
         

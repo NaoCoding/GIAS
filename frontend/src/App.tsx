@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import './App.css';
 import QueryPage from './pages/QueryPage';
 import IssueAnalysisPage from './pages/IssueAnalysisPage';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('query');
+type PageType = 'query' | 'issue';
+
+// Component for handling direct issue URL routes
+function IssueRouteHandler(): React.ReactElement {
+  const { owner, repo, issueId } = useParams<{ owner: string; repo: string; issueId: string }>();
+  
+  if (!owner || !repo || !issueId) {
+    return <div>Invalid URL format</div>;
+  }
+
+  return <IssueAnalysisPage initialOwner={owner} initialRepo={repo} initialIssueId={issueId} />;
+}
+
+function AppContent(): React.ReactElement {
+  const [currentPage, setCurrentPage] = useState<PageType>('query');
 
   return (
     <div className="app">
@@ -37,6 +51,17 @@ function App() {
         <p>&copy; 2025 GIAS Frontend. Backend: http://localhost:8000</p>
       </footer>
     </div>
+  );
+}
+
+function App(): React.ReactElement {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<AppContent />} />
+        <Route path="/:owner/:repo/issues/:issueId" element={<IssueRouteHandler />} />
+      </Routes>
+    </Router>
   );
 }
 

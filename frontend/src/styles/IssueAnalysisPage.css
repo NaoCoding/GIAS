@@ -116,10 +116,121 @@
 .analysis-text {
   color: #555;
   line-height: 1.8;
-  white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'Courier New', monospace;
   font-size: 0.95rem;
+}
+
+/* Markdown rendering styles */
+.analysis-text h1,
+.analysis-text h2,
+.analysis-text h3,
+.analysis-text h4,
+.analysis-text h5,
+.analysis-text h6 {
+  color: #333;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.analysis-text h1 {
+  font-size: 1.75rem;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.analysis-text h2 {
+  font-size: 1.5rem;
+}
+
+.analysis-text h3 {
+  font-size: 1.25rem;
+}
+
+.analysis-text h4,
+.analysis-text h5,
+.analysis-text h6 {
+  font-size: 1.1rem;
+}
+
+.analysis-text p {
+  margin-bottom: 1rem;
+  color: #555;
+  line-height: 1.8;
+}
+
+.analysis-text ul,
+.analysis-text ol {
+  margin-left: 2rem;
+  margin-bottom: 1rem;
+  color: #555;
+}
+
+.analysis-text li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.analysis-text code {
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  padding: 0.2rem 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #d63384;
+}
+
+.analysis-text pre {
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.analysis-text pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #333;
+}
+
+.analysis-text blockquote {
+  border-left: 4px solid #667eea;
+  margin-left: 0;
+  padding-left: 1rem;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.analysis-text a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.analysis-text a:hover {
+  text-decoration: underline;
+}
+
+.analysis-text table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.analysis-text th,
+.analysis-text td {
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.analysis-text th {
+  background: #f4f4f4;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
@@ -148,5 +259,22 @@
 
   .analysis-text {
     font-size: 0.85rem;
+  }
+
+  .analysis-text h1 {
+    font-size: 1.5rem;
+  }
+
+  .analysis-text h2 {
+    font-size: 1.25rem;
+  }
+
+  .analysis-text h3 {
+    font-size: 1.1rem;
+  }
+
+  .analysis-text ul,
+  .analysis-text ol {
+    margin-left: 1.5rem;
   }
 }
