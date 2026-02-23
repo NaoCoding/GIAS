@@ -25,8 +25,99 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_rag_knowledge_base(docs: list[Document]) -> Chroma:
-    """Splits documents and builds the vector store using local Ollama for embeddings."""
+def save_repository_code(
+    documents: list[Document],
+    repo_owner: str,
+    repo_name: str,
+    output_base_dir: str = "./saved_repos",
+) -> str:
+    """
+    Save repository code to disk for easy testing and reference.
+    
+    Args:
+        documents: List of LangChain Documents containing code
+        repo_owner: Repository owner
+        repo_name: Repository name
+        output_base_dir: Base directory to save repositories
+        
+    Returns:
+        Path to the saved repository directory
+    """
+    from datetime import datetime
+    
+    # Create repository-specific directory with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    repo_dir = os.path.join(output_base_dir, f"{repo_owner}_{repo_name}_{timestamp}")
+    os.makedirs(repo_dir, exist_ok=True)
+    
+    logger.info(f"Saving repository code to {repo_dir}...")
+    
+    saved_files = 0
+    for doc in documents:
+        if not doc.metadata:
+            continue
+            
+        source = doc.metadata.get("source", "unknown")
+        
+        # Construct file path
+        if "/" in source:
+            # Extract relative path from source (e.g., "owner/repo/path/to/file.py" -> "path/to/file.py")
+            parts = source.split("/", 2)  # Split into [owner, repo, rest]
+            if len(parts) >= 3:
+                file_path = parts[2]
+            else:
+                file_path = source
+        else:
+            file_path = source
+        
+        full_path = os.path.join(repo_dir, file_path)
+        
+        # Create directory structure
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        
+        # Save file
+        try:
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(doc.page_content)
+            saved_files += 1
+        except Exception as e:
+            logger.warning(f"Failed to save {file_path}: {e}")
+    
+    logger.info(f"Saved {saved_files} files to {repo_dir}")
+    
+    # Save metadata about the saved repository
+    import json
+    metadata = {
+        "timestamp": timestamp,
+        "repository": f"{repo_owner}/{repo_name}",
+        "total_files": saved_files,
+        "total_documents": len(documents),
+    }
+    metadata_path = os.path.join(repo_dir, ".gias_metadata.json")
+    with open(metadata_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+    
+    return repo_dir
+
+
+def create_rag_knowledge_base(
+    docs: list[Document],
+    repo_owner: str = None,
+    repo_name: str = None,
+    save_repo_code: bool = True,
+) -> tuple[Chroma, str]:
+    """
+    Splits documents and builds the vector store using local Ollama for embeddings.
+    
+    Args:
+        docs: List of documents to process
+        repo_owner: Repository owner (for saving code)
+        repo_name: Repository name (for saving code)
+        save_repo_code: Whether to save the repository code to disk
+        
+    Returns:
+        Tuple of (Chroma vectorstore, path to saved repo code if enabled else None)
+    """
 
     if not docs:
         logger.error("No documents available for processing. RAG creation failed.")
@@ -67,7 +158,13 @@ def create_rag_knowledge_base(docs: list[Document]) -> Chroma:
         documents=processed_docs, embedding=embeddings, persist_directory=CHROMA_DB_PATH
     )
     logger.info("Vector store creation complete.")
-    return vectorstore
+    
+    # Save repository code if requested
+    saved_repo_path = None
+    if save_repo_code and repo_owner and repo_name:
+        saved_repo_path = save_repository_code(docs, repo_owner, repo_name)
+    
+    return vectorstore, saved_repo_path
 
 
 if __name__ == "__main__":
@@ -83,9 +180,13 @@ if __name__ == "__main__":
     logger.info(f"Total documents retrieved: {len(documents)}")
 
     try:
-        rag_knowledge_base = create_rag_knowledge_base(documents)
+        rag_knowledge_base, saved_path = create_rag_knowledge_base(
+            documents, REPO_OWNER, REPO_NAME, save_repo_code=True
+        )
         rag_knowledge_base.persist()
         logger.info("RAG knowledge base created and persisted successfully.")
+        if saved_path:
+            logger.info(f"Repository code saved to: {saved_path}")
     except Exception as e:
         logger.error(f"Failed to create RAG knowledge base: {e}")
         exit(1)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { analyzeIssue, AnalysisResponse } from '../api';
+import { analyzeIssue, AnalysisResponse, triggerPatchDownload } from '../api';
 import '../styles/IssueAnalysisPage.css';
 
 interface IssueAnalysisPageProps {
@@ -81,6 +81,98 @@ function IssueAnalysisPage({
     setError(null);
     setSuccess(null);
     hasAnalyzedRef.current = false;
+  };
+
+  const handleDownloadPatch = (): void => {
+    if (analysis?.patch?.patch_content) {
+      const patchName = `issue_${issueId}_${repo}_fix.patch`;
+      triggerPatchDownload(analysis.patch.patch_content, patchName);
+    }
+  };
+
+  const renderPatchSection = (): React.ReactElement | null => {
+    if (!analysis?.patch) return null;
+
+    const patch = analysis.patch;
+
+    return (
+      <div className="patch-section">
+        <h4>Generated Patch</h4>
+        
+        {patch.status === 'success' && (
+          <div className="patch-info patch-success">
+            <div className="patch-status">✓ Patch Generated Successfully</div>
+            
+            {patch.files_changed.length > 0 && (
+              <div className="patch-files">
+                <strong>Files Changed:</strong>
+                <ul>
+                  {patch.files_changed.map((file, idx) => (
+                    <li key={idx}>{file}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {patch.commit_message && (
+              <div className="patch-commit">
+                <strong>Suggested Commit Message:</strong>
+                <pre>{patch.commit_message}</pre>
+              </div>
+            )}
+
+            <div className="patch-actions">
+              <button 
+                className="btn btn-patch" 
+                onClick={handleDownloadPatch}
+                title="Download the patch file to your computer"
+              >
+                📥 Download Patch
+              </button>
+              {patch.patch_file && (
+                <span className="patch-file-info">
+                  Saved to: {patch.patch_file}
+                </span>
+              )}
+            </div>
+
+            {patch.patch_content && (
+              <details className="patch-preview">
+                <summary>View Patch Content</summary>
+                <pre className="patch-code">{patch.patch_content}</pre>
+              </details>
+            )}
+          </div>
+        )}
+
+        {patch.status === 'warning' && (
+          <div className="patch-info patch-warning">
+            <div className="patch-status">⚠ Patch Generation Warning</div>
+            <p>The patch was generated but may require review before applying.</p>
+            {patch.patch_content && (
+              <details className="patch-preview">
+                <summary>View Patch Specification</summary>
+                <pre className="patch-code">{patch.patch_content}</pre>
+              </details>
+            )}
+          </div>
+        )}
+
+        {patch.status === 'failed' && (
+          <div className="patch-info patch-failed">
+            <div className="patch-status">✗ Patch Generation Failed</div>
+            <p>Unable to generate patch from the analysis.</p>
+          </div>
+        )}
+
+        {patch.status === 'not_generated' && (
+          <div className="patch-info patch-not-generated">
+            <div className="patch-status">ℹ Patch Not Generated</div>
+            <p>Patch generation was not attempted for this analysis.</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -182,6 +274,8 @@ function IssueAnalysisPage({
                   <ReactMarkdown>{analysis.analysis}</ReactMarkdown>
                 </div>
               </div>
+
+              {renderPatchSection()}
             </div>
           </div>
         )}

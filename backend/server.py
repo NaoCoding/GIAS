@@ -15,8 +15,21 @@ from langchain_community.vectorstores import Chroma
 from pydantic import BaseModel
 
 from agent.root_agent import root_agent
-from backend.model import AnalysisRequest, AnalysisResponse, QueryRequest, QueryResponse
+from agent.patch_agent import PatchAgent
+from backend.model import (
+    AnalysisRequest,
+    AnalysisResponse,
+    QueryRequest,
+    QueryResponse,
+    PatchInfo,
+    PatchGenerationRequest,
+    PatchGenerationResponse,
+    RAGBuildRequest,
+    RAGBuildResponse,
+    PatchListResponse,
+)
 from tool.github_tool import get_issue_by_issue_id, get_repo_content_by_git
+from tool.rag_tool import create_rag_knowledge_base
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +42,7 @@ logger = logging.getLogger(__name__)
 OLLAMA_EMBEDDING_MODEL = "embeddinggemma"
 OLLAMA_BASE_URL = "http://localhost:11434"
 CHROMA_DB_PATH = "./chroma_db"
+PATCHES_DIR = "./patches"
 
 # Initialize FastAPI app
 app = FastAPI(title="GIAS Backend - GitHub Issue Analysis Server")
@@ -44,6 +58,9 @@ app.add_middleware(
 # Global variables
 _agent = None
 _vectorstore = None
+_patch_agent = None
+_current_repo_owner = None
+_current_repo_name = None
 
 
 async def initialize_agent():
@@ -69,6 +86,99 @@ async def initialize_agent():
         raise
 
 
+def _initialize_patch_agent():
+    """Initialize patch agent for current repository"""
+    global _patch_agent, _vectorstore, _current_repo_owner, _current_repo_name
+    
+    if _vectorstore and _current_repo_owner and _current_repo_name:
+        _patch_agent = PatchAgent(
+            _vectorstore,
+            _current_repo_owner,
+            _current_repo_name,
+            patches_dir=PATCHES_DIR,
+        )
+        logger.info(f"Patch agent initialized for {_current_repo_owner}/{_current_repo_name}")
+
+
+def _generate_patch_internal(
+    owner: str,
+    repo: str,
+    issue_id: int,
+    issue_title: str,
+    issue_body: str,
+    analysis: str,
+) -> PatchInfo:
+    """
+    Internal helper to generate a patch and return PatchInfo.
+    This is called automatically after analysis.
+    
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_id: GitHub issue ID
+        issue_title: Issue title
+        issue_body: Issue description
+        analysis: AI analysis result
+        
+    Returns:
+        PatchInfo object with patch details or empty if generation failed
+    """
+    try:
+        # Only generate patch if patch agent is initialized and repo matches
+        if not _patch_agent:
+            logger.debug("Patch agent not initialized, skipping patch generation")
+            return PatchInfo(status="not_generated")
+        
+        if _current_repo_owner != owner or _current_repo_name != repo:
+            logger.debug(
+                f"Repository mismatch ({owner}/{repo} vs {_current_repo_owner}/{_current_repo_name}), "
+                "skipping patch generation"
+            )
+            return PatchInfo(status="not_generated")
+        
+        logger.info(f"Auto-generating patch for issue #{issue_id}...")
+        
+        # Generate the patch
+        result = _patch_agent.generate_patch(
+            issue_id=issue_id,
+            issue_title=issue_title,
+            issue_body=issue_body,
+            analysis=analysis,
+        )
+        
+        if result["status"] == "success":
+            # Read patch content to send to frontend
+            patch_content = None
+            patch_file = result.get("patch_file")
+            if patch_file and os.path.exists(patch_file):
+                try:
+                    with open(patch_file, "r", encoding="utf-8") as f:
+                        patch_content = f.read()
+                except Exception as e:
+                    logger.warning(f"Could not read patch file: {e}")
+            
+            return PatchInfo(
+                patch_file=patch_file,
+                patch_content=patch_content,
+                metadata_file=result.get("metadata_file"),
+                commit_message=result.get("commit_message"),
+                files_changed=result.get("files_changed", []),
+                status="success",
+            )
+        elif result["status"] == "warning":
+            return PatchInfo(
+                patch_content=result.get("specification", ""),
+                status="warning",
+            )
+        else:
+            logger.warning(f"Patch generation failed: {result.get('message')}")
+            return PatchInfo(status="failed")
+            
+    except Exception as e:
+        logger.warning(f"Error during auto patch generation: {e}")
+        return PatchInfo(status="failed")
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize agent on startup"""
@@ -85,7 +195,8 @@ async def read_root():
 @app.post("/api/analyze-issue", response_model=AnalysisResponse)
 async def analyze_issue(request: AnalysisRequest):
     """
-    Analyze a GitHub issue using RAG and root agent
+    Analyze a GitHub issue using RAG and root agent.
+    Automatically generates a patch from the analysis.
 
     Args:
         owner: Repository owner
@@ -129,12 +240,23 @@ async def analyze_issue(request: AnalysisRequest):
         # Run analysis through agent
         analysis_result = _agent.run(user_query)
 
+        # AUTO-GENERATE PATCH from analysis result
+        patch_info = _generate_patch_internal(
+            owner=request.owner,
+            repo=request.repo,
+            issue_id=request.issue_id,
+            issue_title=issue_title,
+            issue_body=issue_body,
+            analysis=analysis_result,
+        )
+
         return AnalysisResponse(
             issue_url=issue_url,
             issue_title=issue_title,
             issue_body=issue_body[:500],  # Truncate for response
             analysis=analysis_result,
             status="success",
+            patch=patch_info,  # Include patch in response
         )
 
     except HTTPException:
@@ -147,7 +269,8 @@ async def analyze_issue(request: AnalysisRequest):
 @app.post("/api/query", response_model=QueryResponse)
 async def query_agent(request: QueryRequest):
     """
-    Send a custom query to the root agent
+    Send a custom query to the root agent.
+    Attempts to generate a patch if the query results in actionable code changes.
 
     Args:
         query: The question to ask
@@ -160,7 +283,48 @@ async def query_agent(request: QueryRequest):
 
         result = _agent.run(request.query)
 
-        return QueryResponse(result=result, status="success")
+        # TRY TO AUTO-GENERATE PATCH from query result
+        # Only works if query is about a specific issue or code change
+        patch_info = PatchInfo(status="not_generated")
+        
+        if _patch_agent and _current_repo_owner and _current_repo_name:
+            try:
+                # Check if the query mentions an issue ID
+                import re
+                issue_match = re.search(r'#(\d+)', request.query)
+                if issue_match:
+                    issue_id = int(issue_match.group(1))
+                    logger.info(f"Detected issue #{issue_id} in query, attempting patch generation...")
+                    
+                    patch_result = _patch_agent.generate_patch(
+                        issue_id=issue_id,
+                        issue_title="Query Result Fix",
+                        issue_body=request.query[:500],
+                        analysis=result,
+                    )
+                    
+                    if patch_result["status"] == "success":
+                        patch_content = None
+                        patch_file = patch_result.get("patch_file")
+                        if patch_file and os.path.exists(patch_file):
+                            try:
+                                with open(patch_file, "r", encoding="utf-8") as f:
+                                    patch_content = f.read()
+                            except Exception as e:
+                                logger.warning(f"Could not read patch file: {e}")
+                        
+                        patch_info = PatchInfo(
+                            patch_file=patch_file,
+                            patch_content=patch_content,
+                            metadata_file=patch_result.get("metadata_file"),
+                            commit_message=patch_result.get("commit_message"),
+                            files_changed=patch_result.get("files_changed", []),
+                            status="success",
+                        )
+            except Exception as e:
+                logger.debug(f"Could not auto-generate patch from query: {e}")
+
+        return QueryResponse(result=result, status="success", patch=patch_info)
 
     except Exception as e:
         logger.error(f"Error processing query: {e}", exc_info=True)
@@ -174,17 +338,20 @@ async def health_check():
         "status": "healthy",
         "agent_initialized": _agent is not None,
         "vectorstore_initialized": _vectorstore is not None,
+        "patch_agent_initialized": _patch_agent is not None,
+        "current_repo": f"{_current_repo_owner}/{_current_repo_name}" if _current_repo_owner and _current_repo_name else None,
     }
 
 
-@app.post("/api/build-rag")
-async def build_rag_for_repo(request: AnalysisRequest):
+@app.post("/api/build-rag", response_model=RAGBuildResponse)
+async def build_rag_for_repo(request: RAGBuildRequest):
     """
     Build RAG knowledge base for a repository
 
     Args:
         owner: Repository owner
         repo: Repository name
+        save_code: Whether to save repository code to disk
     """
     try:
         logger.info(f"Building RAG for {request.owner}/{request.repo}...")
@@ -199,26 +366,155 @@ async def build_rag_for_repo(request: AnalysisRequest):
 
         logger.info(f"Retrieved {len(documents)} documents")
 
-        # Re-initialize vectorstore and agent with new documents
-        from tool.rag_tool import create_rag_knowledge_base
+        # Create RAG knowledge base with optional code saving
+        vectorstore, saved_repo_path = create_rag_knowledge_base(
+            documents,
+            repo_owner=request.owner,
+            repo_name=request.repo,
+            save_repo_code=request.save_code,
+        )
 
-        vectorstore = create_rag_knowledge_base(documents)
-
-        global _vectorstore, _agent
+        global _vectorstore, _agent, _patch_agent, _current_repo_owner, _current_repo_name
         _vectorstore = vectorstore
+        _current_repo_owner = request.owner
+        _current_repo_name = request.repo
         _agent = root_agent(_vectorstore)
+        _initialize_patch_agent()
 
         logger.info("RAG knowledge base rebuilt successfully")
 
-        return {
-            "status": "success",
-            "message": f"RAG knowledge base built for {request.owner}/{request.repo}",
-            "document_count": len(documents),
-        }
+        message = f"RAG knowledge base built for {request.owner}/{request.repo}"
+        if saved_repo_path:
+            message += f"\nRepository code saved to: {saved_repo_path}"
+
+        return RAGBuildResponse(
+            status="success",
+            message=message,
+            document_count=len(documents),
+            saved_repo_path=saved_repo_path,
+        )
 
     except Exception as e:
         logger.error(f"Error building RAG: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"RAG build failed: {str(e)}")
+
+
+@app.post("/api/generate-patch", response_model=PatchGenerationResponse)
+async def generate_patch(request: PatchGenerationRequest):
+    """
+    Generate a git patch from an issue analysis
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_id: GitHub issue ID
+        issue_title: GitHub issue title
+        issue_body: GitHub issue description
+        analysis: AI analysis of the issue
+        query: Optional custom query for patch generation
+    """
+    try:
+        if _patch_agent is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Patch agent not initialized. Please build RAG for the repository first.",
+            )
+
+        logger.info(f"Generating patch for issue #{request.issue_id}")
+
+        # Generate patch
+        result = _patch_agent.generate_patch(
+            issue_id=request.issue_id,
+            issue_title=request.issue_title,
+            issue_body=request.issue_body,
+            analysis=request.analysis,
+            custom_query=request.query,
+        )
+
+        if result["status"] == "success":
+            return PatchGenerationResponse(
+                status="success",
+                issue_id=result["issue_id"],
+                issue_title=result["issue_title"],
+                patch_file=result.get("patch_file"),
+                metadata_file=result.get("metadata_file"),
+                commit_message=result.get("commit_message"),
+                files_changed=result.get("files_changed", []),
+                specification=result.get("specification", ""),
+            )
+        elif result["status"] == "warning":
+            return PatchGenerationResponse(
+                status="warning",
+                issue_id=request.issue_id,
+                issue_title=request.issue_title,
+                message=result.get("message"),
+                specification=result.get("specification", ""),
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=result.get("message", "Failed to generate patch"),
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating patch: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Patch generation failed: {str(e)}")
+
+
+@app.get("/api/patches", response_model=PatchListResponse)
+async def list_patches():
+    """
+    List all generated patches
+
+    Returns:
+        List of patch information
+    """
+    try:
+        if _patch_agent is None:
+            return PatchListResponse(status="success", patches=[], total_count=0)
+
+        patches = _patch_agent.list_generated_patches()
+
+        return PatchListResponse(
+            status="success", patches=patches, total_count=len(patches)
+        )
+
+    except Exception as e:
+        logger.error(f"Error listing patches: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to list patches: {str(e)}")
+
+
+@app.get("/api/patches/{patch_name}")
+async def get_patch_details(patch_name: str):
+    """
+    Get detailed information about a specific patch
+
+    Args:
+        patch_name: Name of the patch file
+
+    Returns:
+        Patch details including metadata
+    """
+    try:
+        if _patch_agent is None:
+            raise HTTPException(status_code=503, detail="Patch agent not initialized")
+
+        patch_details = _patch_agent.get_patch_details(patch_name)
+
+        if patch_details is None:
+            raise HTTPException(status_code=404, detail=f"Patch not found: {patch_name}")
+
+        return patch_details
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting patch details: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get patch details: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

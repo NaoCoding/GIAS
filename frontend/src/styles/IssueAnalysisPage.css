@@ -233,6 +233,198 @@
   font-weight: 600;
 }
 
+/* Patch Section Styles */
+.patch-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 4px;
+  border-left: 4px solid #10b981;
+  margin-top: 1.5rem;
+}
+
+.patch-section h4 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.patch-info {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.patch-success {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+}
+
+.patch-warning {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+}
+
+.patch-failed {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.patch-not-generated {
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+}
+
+.patch-status {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.patch-success .patch-status {
+  color: #059669;
+}
+
+.patch-warning .patch-status {
+  color: #b45309;
+}
+
+.patch-failed .patch-status {
+  color: #dc2626;
+}
+
+.patch-not-generated .patch-status {
+  color: #4f46e5;
+}
+
+.patch-files {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.patch-files strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.patch-files ul {
+  list-style: none;
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.patch-files li {
+  color: #555;
+  padding: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.patch-files li::before {
+  content: '📄 ';
+  margin-right: 0.5rem;
+}
+
+.patch-commit {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.patch-commit strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.patch-commit pre {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+.patch-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.btn-patch {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-patch:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-patch:active {
+  transform: translateY(0);
+}
+
+.patch-file-info {
+  color: #666;
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.patch-preview {
+  margin-top: 1rem;
+}
+
+.patch-preview summary {
+  cursor: pointer;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  user-select: none;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.2s ease;
+}
+
+.patch-preview summary:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.patch-code {
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+  margin: 0.75rem 0 0 0;
+  color: #333;
+  line-height: 1.5;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 @media (max-width: 768px) {
   .issue-container {
     padding: 1.5rem;
@@ -276,5 +468,28 @@
   .analysis-text ul,
   .analysis-text ol {
     margin-left: 1.5rem;
+  }
+
+  .patch-section {
+    padding: 1rem;
+  }
+
+  .patch-actions {
+    flex-direction: column;
+  }
+
+  .btn-patch {
+    width: 100%;
+    text-align: center;
+  }
+
+  .patch-file-info {
+    width: 100%;
+    word-break: break-all;
+  }
+
+  .patch-code {
+    font-size: 0.75rem;
+    max-height: 300px;
   }
 }
