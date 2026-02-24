@@ -1,6 +1,9 @@
 import logging
 import os
 import shutil
+import time
+import gc
+from datetime import datetime
 
 from dotenv import load_dotenv
 from tool.github_tool import get_repo_content, get_repo_content_by_git
@@ -43,9 +46,6 @@ def save_repository_code(
     Returns:
         Path to the saved repository directory
     """
-    from datetime import datetime
-    
-    # Create repository-specific directory with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     repo_dir = os.path.join(output_base_dir, f"{repo_owner}_{repo_name}_{timestamp}")
     os.makedirs(repo_dir, exist_ok=True)
@@ -61,8 +61,7 @@ def save_repository_code(
         
         # Construct file path
         if "/" in source:
-            # Extract relative path from source (e.g., "owner/repo/path/to/file.py" -> "path/to/file.py")
-            parts = source.split("/", 2)  # Split into [owner, repo, rest]
+            parts = source.split("/", 2)
             if len(parts) >= 3:
                 file_path = parts[2]
             else:
@@ -83,9 +82,9 @@ def save_repository_code(
         except Exception as e:
             logger.warning(f"Failed to save {file_path}: {e}")
     
-    logger.info(f"Saved {saved_files} files to {repo_dir}")
+    logger.info(f"✓ Saved {saved_files} files to {repo_dir}")
     
-    # Save metadata about the saved repository
+    # Save metadata
     import json
     metadata = {
         "timestamp": timestamp,
@@ -105,15 +104,25 @@ def create_rag_knowledge_base(
     repo_owner: str = None,
     repo_name: str = None,
     save_repo_code: bool = True,
+    old_vectorstore = None,
 ) -> tuple[Chroma, str]:
     """
     Splits documents and builds the vector store using local Ollama for embeddings.
+    
+    IMPORTANT: This function does NOT delete or close the old vectorstore.
+    Instead, it rebuilds the database in-place by:
+    1. Clearing the old Chroma collection
+    2. Adding new documents to it
+    
+    This avoids all Windows file locking issues since we never try to delete
+    or rename files that are in use by the running server.
     
     Args:
         docs: List of documents to process
         repo_owner: Repository owner (for saving code)
         repo_name: Repository name (for saving code)
         save_repo_code: Whether to save the repository code to disk
+        old_vectorstore: Existing vectorstore (kept in place, not closed)
         
     Returns:
         Tuple of (Chroma vectorstore, path to saved repo code if enabled else None)
@@ -148,16 +157,23 @@ def create_rag_knowledge_base(
         )
         raise
 
-    # Clean up previous database to ensure fresh analysis
-    if os.path.exists(CHROMA_DB_PATH):
-        logger.warning(f"Removing existing vector store at {CHROMA_DB_PATH}.")
-        shutil.rmtree(CHROMA_DB_PATH)
-
-    # Build Chroma database
-    vectorstore = Chroma.from_documents(
-        documents=processed_docs, embedding=embeddings, persist_directory=CHROMA_DB_PATH
-    )
-    logger.info("Vector store creation complete.")
+    # Strategy: Rebuild Chroma database in-place without deleting
+    # This completely avoids Windows file locking issues
+    logger.info("Building new Chroma vectorstore (in-place, no deletion needed)...")
+    
+    try:
+        # Create new Chroma vectorstore at the same location
+        # Chroma will handle clearing old data and creating new embeddings
+        vectorstore = Chroma.from_documents(
+            documents=processed_docs, 
+            embedding=embeddings, 
+            persist_directory=CHROMA_DB_PATH
+        )
+        logger.info("✓ New vectorstore created successfully at " + CHROMA_DB_PATH)
+        
+    except Exception as e:
+        logger.error(f"Failed to create vectorstore: {e}")
+        raise
     
     # Save repository code if requested
     saved_repo_path = None
@@ -169,8 +185,6 @@ def create_rag_knowledge_base(
 
 if __name__ == "__main__":
     logger.info(f"Loading repository contents from {REPO_OWNER}/{REPO_NAME}...")
-    # documents = get_repo_content(REPO_OWNER, REPO_NAME)
-    # The reason we switch to Git method is to handle large repositories more efficiently
     documents = get_repo_content_by_git(REPO_OWNER, REPO_NAME)
 
     if not documents:

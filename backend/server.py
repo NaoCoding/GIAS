@@ -43,6 +43,9 @@ OLLAMA_EMBEDDING_MODEL = "embeddinggemma"
 OLLAMA_BASE_URL = "http://localhost:11434"
 CHROMA_DB_PATH = "./chroma_db"
 PATCHES_DIR = "./patches"
+# Default repository for patch agent initialization
+DEFAULT_REPO_OWNER = "psf"
+DEFAULT_REPO_NAME = "requests"
 
 # Initialize FastAPI app
 app = FastAPI(title="GIAS Backend - GitHub Issue Analysis Server")
@@ -59,8 +62,8 @@ app.add_middleware(
 _agent = None
 _vectorstore = None
 _patch_agent = None
-_current_repo_owner = None
-_current_repo_name = None
+_current_repo_owner = DEFAULT_REPO_OWNER
+_current_repo_name = DEFAULT_REPO_NAME
 
 
 async def initialize_agent():
@@ -126,13 +129,18 @@ def _generate_patch_internal(
     try:
         # Only generate patch if patch agent is initialized and repo matches
         if not _patch_agent:
-            logger.debug("Patch agent not initialized, skipping patch generation")
+            logger.warning(
+                f"⚠️  Patch agent not initialized. "
+                f"Please call /api/build-rag with owner='{owner}' and repo='{repo}' first to enable patch generation."
+            )
             return PatchInfo(status="not_generated")
         
         if _current_repo_owner != owner or _current_repo_name != repo:
-            logger.debug(
-                f"Repository mismatch ({owner}/{repo} vs {_current_repo_owner}/{_current_repo_name}), "
-                "skipping patch generation"
+            logger.warning(
+                f"⚠️  Repository mismatch for patch generation. "
+                f"Expected: {_current_repo_owner}/{_current_repo_name}, "
+                f"Got: {owner}/{repo}. "
+                f"Please call /api/build-rag for {owner}/{repo} to generate patches for this repository."
             )
             return PatchInfo(status="not_generated")
         
@@ -184,6 +192,8 @@ async def startup_event():
     """Initialize agent on startup"""
     await initialize_agent()
 
+    # Initialize patch agent with default repository
+    _initialize_patch_agent()
 
 # API Routes
 @app.get("/")
@@ -346,7 +356,14 @@ async def health_check():
 @app.post("/api/build-rag", response_model=RAGBuildResponse)
 async def build_rag_for_repo(request: RAGBuildRequest):
     """
-    Build RAG knowledge base for a repository
+    Build RAG knowledge base for a repository.
+    
+    This endpoint:
+    1. Fetches repository content from GitHub
+    2. Rebuilds the chroma_db in-place (no deletion needed)
+    3. Reinitializes the agent with new data
+    
+    No server restart required - the vectorstore is automatically updated.
 
     Args:
         owner: Repository owner
@@ -354,9 +371,12 @@ async def build_rag_for_repo(request: RAGBuildRequest):
         save_code: Whether to save repository code to disk
     """
     try:
+        global _vectorstore, _agent, _patch_agent, _current_repo_owner, _current_repo_name
+        
         logger.info(f"Building RAG for {request.owner}/{request.repo}...")
 
-        # Load repository content
+        # Load repository content from GitHub
+        logger.info("Fetching repository content from GitHub...")
         documents = get_repo_content_by_git(request.owner, request.repo)
 
         if not documents:
@@ -366,22 +386,28 @@ async def build_rag_for_repo(request: RAGBuildRequest):
 
         logger.info(f"Retrieved {len(documents)} documents")
 
-        # Create RAG knowledge base with optional code saving
+        # Build RAG knowledge base
+        # This will rebuild chroma_db in-place without any deletion
+        logger.info("Building new RAG knowledge base...")
         vectorstore, saved_repo_path = create_rag_knowledge_base(
             documents,
             repo_owner=request.owner,
             repo_name=request.repo,
             save_repo_code=request.save_code,
+            old_vectorstore=_vectorstore,  # Keep reference but don't close it
         )
 
-        global _vectorstore, _agent, _patch_agent, _current_repo_owner, _current_repo_name
+        # Update global variables with new vectorstore
         _vectorstore = vectorstore
         _current_repo_owner = request.owner
         _current_repo_name = request.repo
+        
+        # Reinitialize agent with new vectorstore
+        logger.info("Reinitializing agent with new vectorstore...")
         _agent = root_agent(_vectorstore)
         _initialize_patch_agent()
 
-        logger.info("RAG knowledge base rebuilt successfully")
+        logger.info("✓ RAG knowledge base rebuilt successfully")
 
         message = f"RAG knowledge base built for {request.owner}/{request.repo}"
         if saved_repo_path:
@@ -394,6 +420,8 @@ async def build_rag_for_repo(request: RAGBuildRequest):
             saved_repo_path=saved_repo_path,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error building RAG: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"RAG build failed: {str(e)}")

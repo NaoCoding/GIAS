@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-
 import './App.css';
 import QueryPage from './pages/QueryPage';
 import IssueAnalysisPage from './pages/IssueAnalysisPage';
+import RAGBuilderPage from './pages/RAGBuilderPage';
 
-type PageType = 'query' | 'issue';
+type PageType = 'query' | 'issue' | 'rag-builder';
 
 // Component for handling direct issue URL routes
 function IssueRouteHandler(): React.ReactElement {
@@ -38,6 +39,12 @@ function AppContent(): React.ReactElement {
             >
               Analyze Issue
             </button>
+            <button
+              className={`nav-btn ${currentPage === 'rag-builder' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('rag-builder')}
+            >
+              Build RAG
+            </button>
           </nav>
         </div>
       </header>
@@ -45,6 +52,7 @@ function AppContent(): React.ReactElement {
       <main className="main-content">
         {currentPage === 'query' && <QueryPage />}
         {currentPage === 'issue' && <IssueAnalysisPage />}
+        {currentPage === 'rag-builder' && <RAGBuilderPage />}
       </main>
 
       <footer className="footer">

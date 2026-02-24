@@ -13,7 +13,7 @@ from agent.prompt.patch_agent import system_prompt
 from tool.patch_tool import PatchGenerator
 
 load_dotenv()
-LLM_MODEL = "kwaipilot/kat-coder-pro:free"
+LLM_MODEL = "arcee-ai/trinity-large-preview:free"
 openrouter_key = os.environ.get("OPEN_ROUTER_API_KEY")
 
 logging.basicConfig(

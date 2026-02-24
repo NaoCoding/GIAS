@@ -9,7 +9,7 @@ from langchain_openai import ChatOpenAI
 
 from agent.prompt.root_agent import system_prompt
 
-LLM_MODEL = "kwaipilot/kat-coder-pro:free"
+LLM_MODEL = "arcee-ai/trinity-large-preview:free"
 load_dotenv()
 openrouter_key = os.environ.get("OPEN_ROUTER_API_KEY")
 
